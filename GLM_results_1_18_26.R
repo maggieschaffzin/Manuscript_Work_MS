@@ -1,14 +1,15 @@
 #Project: Rerunning Generalized Linear Mixed Effects Model with all Fixed/Random Effects
 #By: Maggie Schaffzin
 #Created: October 25th, 2025
-#Last edited: January 5th, 2026
-
+#Last edited: January 18th, 2026
 
 library(dplyr)
 library(lme4)
 library(performance)
 library(broom.mixed)
 library(readr)
+library(stringr)
+
 
 #Loading dataset
 df <- read_csv("Unified_VRG_PISCO_gorgonian_dataset.csv")
@@ -89,18 +90,18 @@ for (sp in species_list) {
   model_results[[sp]] <- model
   summary_results[[sp]] <- tidy_df
   
-  # Printing a short summary
+  #Printing short summary 
   print(tidy_df[, c("term", "estimate", "std.error", "t_value")])
 }
 
 #Combining all species results
 all_results <- bind_rows(summary_results)
 
-#Saving CSV and RData
-write_csv(all_results, "GLMM_scaled_results_all_species_12_29.csv")
-save(model_results, file = "GLMM_scaled_species_models_12_29.RData")
+#Saving CSV and RData for LMM
+write_csv(all_results, "GLMM_scaled_results_all_species_1_5_26.csv")
+save(model_results, file = "GLMM_scaled_species_models_1_5_26.RData")
 
-#For fun: creating compact R2 summary table
+#Creating compact R2 summary table
 r2_summary <- lapply(model_results, function(m) {
   r <- performance::r2(m)
   data.frame(
@@ -109,8 +110,6 @@ r2_summary <- lapply(model_results, function(m) {
   )
 })
 r2_summary_df <- bind_rows(r2_summary, .id = "Species")
-write_csv(r2_summary_df, "GLMM_species_R2_summary_12_29.csv")
 
-
-
-
+#Saving R2 Table
+write_csv(r2_summary_df, "GLMM_species_R2_summary_1_15.csv")

@@ -169,7 +169,7 @@ PISCO_gorgonian_means <- PISCO_gorgonian_refined %>%
 #Creating Reef Type category for PISCO data (they're all natural reefs but need for merging w VRG data)
    dplyr::mutate(
     Reef_Type = dplyr::case_when(
-      stringr::str_detect(site, "AR|PVR") ~ "Artificial Reef",
+      stringr::str_detect(site, "AR |PVR") ~ "Artificial Reef",
       TRUE ~ "Natural Reef"
     )
   )
