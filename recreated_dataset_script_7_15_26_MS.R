@@ -1,7 +1,7 @@
 #Project: Recreating dataset averages from honors and analyses for Manuscript
 #By: Maggie Schaffzin
 #Created: October 13th, 2025
-#Last edited: December 15th, 2025
+#Last edited: July 15th, 2026
 
 #Installing and loading required packages
 required_packages <- c("tidyverse", "readr", "dplyr")
@@ -151,9 +151,11 @@ head(PISCO_gorgonian)
 PISCO_gorgonian_refined <- PISCO_gorgonian %>%
   dplyr::select(species_definition, site, zone, count, depth) %>%
   dplyr::mutate(
-    mean_density = (count / 60) * 100   
+    gorg_density = (count / 60) * 100   
   )
 
+mean_gorgonian_density <- PISCO_gorgonian_refined %>%
+  summarise(mean_gorg_density = mean(gorg_density, na.rm = TRUE))
 head(PISCO_gorgonian_refined)
 
 # Calculating mean depth per site, depth zone, and species
@@ -162,14 +164,14 @@ PISCO_gorgonian_means <- PISCO_gorgonian_refined %>%
   dplyr::group_by(site, species_definition, zone) %>%
   dplyr::summarise(
     mean_depth   = mean(depth, na.rm = TRUE),
-    mean_gorg_density = mean(mean_density),
+    mean_gorg_density = mean(gorg_density, na.rm = TRUE),
     .groups = "drop"
   ) %>%
 
 #Creating Reef Type category for PISCO data (they're all natural reefs but need for merging w VRG data)
    dplyr::mutate(
     Reef_Type = dplyr::case_when(
-      stringr::str_detect(site, "AR |PVR") ~ "Artificial Reef",
+      stringr::str_detect(site, "AR|PVR") ~ "Artificial Reef",
       TRUE ~ "Natural Reef"
     )
   )
@@ -294,9 +296,12 @@ Unified_gorgonian_dataset <- bind_rows(
   PISCO_final[, common_cols]
 )
 
+#Removing L. alba from the unified dataset
+Unified_gorgonian_dataset <- Unified_gorgonian_dataset %>%
+  dplyr::filter(BenthicReefSpecies != "Leptogorgia alba")
+
 #Checking structure of the final dataset
 glimpse(Unified_gorgonian_dataset)
 
 #Saving the unified dataset for linear analyses
 write_csv(Unified_gorgonian_dataset, "Unified_VRG_PISCO_gorgonian_dataset.csv")
-

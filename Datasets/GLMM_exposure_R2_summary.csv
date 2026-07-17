@@ -1,0 +1,5 @@
+Species,Model_type,Marginal_R2,Conditional_R2
+Eugorgia rubens,LMM,0.062291619365905215,0.19583730971898988
+Leptogorgia chilensis,LM,0.2063852520000755,NA
+Muricea californica,LMM,0.37737208933237737,0.7246352821094011
+Muricea fruticosa,LM,0.15465390852414082,NA

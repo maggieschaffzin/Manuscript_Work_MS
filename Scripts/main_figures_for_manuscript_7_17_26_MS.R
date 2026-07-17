@@ -1,7 +1,7 @@
 #Project: Main Figures (excluding heatmap) for Manuscript
 #By: Maggie Schaffzin
 #Created: December 30th, 2025
-#Last edited: July 15th, 2026
+#Last edited: July 17th, 2026
 
 #Loading packages
 library(tidyverse)
@@ -24,22 +24,22 @@ theme_set(
     )
 )
 
-#Loading your data
-dat <- read_csv("Unified_VRG_PISCO_gorgonian_dataset.csv")
+#Loading my data
+dat <- read_csv("C:/Users/bethm/Documents/Manuscript Work/Datasets/Unified_VRG_PISCO_gorgonian_dataset_with_exposure.csv")
 
-# Compute mean density per site (across all species)
+#Computing mean density per site (across all species)
 site_density <- dat %>%
   group_by(Site, mean_Longitude, mean_Latitude) %>%
   summarise(mean_density = mean(mean_gorgonian_density, na.rm = TRUE), .groups = "drop")
 
-# Exclude the single outlier (ANACAPA_WEST_ISLE_W, density = 204)
+#Excluding the single outlier (ANACAPA_WEST_ISLE_W, density = 204)
 site_density <- site_density %>%
   filter(Site != "ANACAPA_WEST_ISLE_W")
 
 cat("Sites after removing outlier:", nrow(site_density), "\n")
 cat("Density range after exclusion:", range(site_density$mean_density, na.rm = TRUE), "\n")
 
-# Bins based on actual data spread (quartile-informed to show variation in bulk of data)
+#Binning based on actual data spread (quartile-informed)
 density_breaks <- c(0, 5, 20, 50, 90)
 density_labels <- c("0-5", "5-20", "20-50", "50-90")
 
@@ -52,24 +52,24 @@ site_density <- site_density %>%
 cat("Bin counts:\n")
 print(table(site_density$density_bin, useNA = "always"))
 
-# Define legend title once so both scales are truly identical and merge into one legend
+#Defining legend title once so both scales are truly identical and merge into one legend
 legend_title <- expression(atop("Mean gorgonian density", "(ind./100m"^-2*")"))
 
-# Load California land for background fill
+#Loading California land for background fill
 california <- ne_states(country = "United States of America", returnclass = "sf") %>%
   filter(name == "California")
 
-# Create detailed coast object for Southern California
+#Creating detailed coast object for Southern California
 coast <- ne_coastline(scale = "large", returnclass = "sf") %>%
   st_crop(xmin = -121.5, xmax = -117, ymin = 32.5, ymax = 34.5)
 
 #Plotting figure with southern california study sites
 fig1_main <- ggplot() +
-  # Land fill (grey)
+  #Land fill (grey)
   geom_sf(data = california, fill = "grey80", color = NA) +
-  # Coastline
+  #Coastline
   geom_sf(data = coast, fill = NA, color = "black", linewidth = 0.4) +
-  # Points: fill AND size by mean density bin, with black outline
+  #Points: fill AND size by mean density bin, with black outline
   geom_point(
     data = site_density,
     aes(
@@ -83,7 +83,7 @@ fig1_main <- ggplot() +
     stroke = 0.4,
     alpha = 0.9
   ) +
-  # Viridis-style fill palette - same name as size scale to merge legends
+  #Viridis-style fill palette
   scale_fill_manual(
     name = legend_title,
     values = c(
@@ -92,9 +92,9 @@ fig1_main <- ggplot() +
       "20-50" = "#35b779",  # green
       "50-90" = "#fde725"   # yellow
     ),
-    drop = FALSE
+    
   ) +
-  # Size scale - same name as fill scale to merge legends
+  #Size scale - same name as fill scale to merge legends
   scale_size_manual(
     name = legend_title,
     values = c(
@@ -103,7 +103,7 @@ fig1_main <- ggplot() +
       "20-50" = 3.0,
       "50-90" = 4.0
     ),
-    drop = FALSE
+   
   ) +
   coord_sf(
     xlim = c(-121.5, -117),
@@ -140,7 +140,7 @@ fig1_main <- ggplot() +
     panel.background = element_rect(fill = "white"),
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
   ) +
-  # Region labels
+  #Creating region labels
   annotate("text", x = -119.9, y = 34.30, label = "Santa Barbara",
            size = 3, fontface = "plain") +
   annotate("text", x = -120.55, y = 34.15, label = "San Miguel",
@@ -170,7 +170,7 @@ fig1_main <- ggplot() +
   annotate("text", x = -117.55, y = 32.68, label = "Point Loma",
            size = 3, fontface = "plain")
 
-#Saving as PDF
+#Saving FIG 1 as PDF
 ggsave(
   filename = "fig1_gorgonian_density.pdf",
   plot = fig1_main,
@@ -178,7 +178,7 @@ ggsave(
   height = 7
 )
 
-# Also save as high-res PNG for quick viewing
+#Also saving as high-res PNG for quick viewing
 ggsave(
   filename = "fig1_gorgonian_density.png",
   plot = fig1_main,
@@ -188,19 +188,19 @@ ggsave(
 )
 
 ####FIGURE 2: Creating Species-specific density maps
-# Check species in dataset
+#Checking species in dataset
 cat("Species in dataset:\n")
 print(sort(unique(dat$BenthicReefSpecies)))
 
-# Load California land for background fill
+#Loading California land for background fill
 california <- ne_states(country = "United States of America", returnclass = "sf") %>%
   filter(name == "California")
 
-# Create detailed coast object for Southern California
+#Creating detailed coast object for Southern California
 coast <- ne_coastline(scale = "large", returnclass = "sf") %>%
   st_crop(xmin = -121.5, xmax = -117, ymin = 32.5, ymax = 34.5)
 
-# Region label annotations (reused across all maps)
+#Creating region label annotations (reused across all maps)
 region_labels <- list(
   annotate("text", x = -119.9,  y = 34.30, label = "Santa Barbara",        size = 2.5, fontface = "plain"),
   annotate("text", x = -120.55, y = 34.15, label = "San Miguel",            size = 2.5, fontface = "plain"),
@@ -218,10 +218,10 @@ region_labels <- list(
   annotate("text", x = -117.55, y = 32.68, label = "Point Loma",            size = 2.5, fontface = "plain")
 )
 
-# Function to make one species map with continuous color scale
+#Making one species map with continuous color scale
 make_species_map <- function(species_name, dat, california, coast, region_labels) {
   
-  # Filter and summarise for this species
+  #Filtering and summarising for this species
   sp_density <- dat %>%
     filter(BenthicReefSpecies == species_name) %>%
     group_by(Site, mean_Longitude, mean_Latitude) %>%
@@ -229,7 +229,7 @@ make_species_map <- function(species_name, dat, california, coast, region_labels
               .groups = "drop") %>%
     filter(!is.na(mean_density))
   
-  # Exclude only the specific Eugorgia rubens Anacapa outlier (density > 200)
+  #Excluding only the specific Eugorgia rubens Anacapa outlier (density > 200)
   if (species_name == "Eugorgia rubens") {
     outliers <- sp_density %>% filter(mean_density > 200)
     if (nrow(outliers) > 0) {
@@ -242,7 +242,7 @@ make_species_map <- function(species_name, dat, california, coast, region_labels
   cat("\nSpecies:", species_name, "| Sites:", nrow(sp_density),
       "| Density range:", round(range(sp_density$mean_density), 2), "\n")
   
-  # Build plot with continuous color scale
+  #Building plot with continuous color scale
   p <- ggplot() +
     geom_sf(data = california, fill = "grey80", color = NA) +
     geom_sf(data = coast, fill = NA, color = "black", linewidth = 0.4) +
@@ -289,7 +289,7 @@ make_species_map <- function(species_name, dat, california, coast, region_labels
                                       linewidth = 0.5)
     )
   
-  # Add region labels
+  #Adding region labels
   for (lbl in region_labels) {
     p <- p + lbl
   }
@@ -297,8 +297,7 @@ make_species_map <- function(species_name, dat, california, coast, region_labels
   return(p)
 }
 
-# Compute global max density across all species (excluding Eugorgia outlier)
-# so all panels share the same color scale
+#Computing global max density across all species (excluding Eugorgia outlier)
 global_max <- dat %>%
   filter(!(BenthicReefSpecies == "Eugorgia rubens" &
              Site %in% c("ANACAPA_WEST_ISLE_W", "ANACAPA_WEST_ISLE_CEN"))) %>%
@@ -310,11 +309,11 @@ global_max <- dat %>%
 
 cat("Global max density (excluding outlier):", round(global_max, 2), "\n")
 
-# Get species list
+#Getting species list
 species_list <- sort(unique(dat$BenthicReefSpecies))
 cat("\nGenerating maps for", length(species_list), "species\n")
 
-# Generate and save one map per species
+#Generating and saving one map per species
 for (sp in species_list) {
   p        <- make_species_map(sp, dat, california, coast, region_labels)
   sp_clean <- gsub(" ", "_", sp)
@@ -324,7 +323,7 @@ for (sp in species_list) {
   cat("Saved map for", sp, "\n")
 }
 
-# Combined multi-panel figure
+#Combining multi-panel figure
 all_plots <- lapply(species_list, function(sp) {
   make_species_map(sp, dat, california, coast, region_labels)
 })
@@ -339,18 +338,17 @@ ggsave("fig2_all_species_density.pdf", combined,
        width = 18, height = 7 * ceiling(length(species_list) / 2))
 
 
-#FIGURE 3: STANDARD EFFECT SIZES
-
+###FIGURE 3:STANDARD EFFECT SIZES
 #Load results if not already in environment
-all_results <- read_csv("GLMM_scaled_results_all_species_7_16.csv")
+all_results <- read_csv("C:/Users/bethm/Documents/Manuscript Work/Datasets/GLMM_exposure_results_all_species.csv")
 
-# Create coef_df from model results
+#Creating coef_df from model results
 coef_df <- all_results %>%
   filter(effect == "fixed") %>%
   filter(term != "(Intercept)") %>%
   select(Species, term, estimate, std.error)
 
-# Clean up term names for publication-ready y-axis labels
+#Cleaning up term names for publication-ready y-axis labels
 term_labels <- c(
   "mean_giantkelp_density_m2" = "KELP",
   "mean_sst_C"                = "SST",
@@ -367,12 +365,10 @@ term_labels <- c(
 )
 
 
-# Apply clean labels, italic species names, and significance flag
-# A term is significant if |t| > 1.96
+#Applying clean labels, italic species names, and significance flag
 coef_df <- all_results %>%
-  filter(effect == "fixed") %>%
+  filter(is.na(effect) | effect == "fixed") %>%
   filter(term != "(Intercept)") %>%
-  select(Species, term, estimate, std.error) %>%
   mutate(term = stringr::str_squish(term)) %>%
   filter(term %in% names(term_labels)) %>%
   mutate(
@@ -383,11 +379,11 @@ coef_df <- all_results %>%
     direction     = estimate > 0
   )
 
-# Build figure
-# shape 21 = circle with separate fill and color (border)
-# significant + positive  = filled blue
-# significant + negative  = filled red
-# non-significant         = white fill, colored border
+#Building figure (legend below for myself)
+#shape 21 = circle with separate fill and color (border)
+#significant + positive  = filled blue
+#significant + negative  = filled red
+#non-significant         = white fill, colored border
 fig3 <- ggplot(coef_df,
                aes(x = estimate, y = term_label)) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.5) +
@@ -411,19 +407,19 @@ fig3 <- ggplot(coef_df,
   ) +
   scale_fill_manual(
     values = c(
-      "FALSE.FALSE" = "white",    # negative, non-significant: open
-      "TRUE.FALSE"  = "white",    # positive, non-significant: open
-      "FALSE.TRUE"  = "#d73027",  # negative, significant: filled red
-      "TRUE.TRUE"   = "#4575b4"   # positive, significant: filled blue
+      "FALSE.FALSE" = "white",    #negative, non-significant: open
+      "TRUE.FALSE"  = "white",    #positive, non-significant: open
+      "FALSE.TRUE"  = "#d73027",  #negative, significant: filled red
+      "TRUE.TRUE"   = "#4575b4"   #positive, significant: filled blue
     ),
     guide = "none"
   ) +
   scale_color_manual(
     values = c(
-      "FALSE.FALSE" = "#d73027",  # negative, non-significant: red border
-      "TRUE.FALSE"  = "#4575b4",  # positive, non-significant: blue border
-      "FALSE.TRUE"  = "#d73027",  # negative, significant: red
-      "TRUE.TRUE"   = "#4575b4"   # positive, significant: blue
+      "FALSE.FALSE" = "#d73027",  #negative, non-significant: red border
+      "TRUE.FALSE"  = "#4575b4",  #positive, non-significant: blue border
+      "FALSE.TRUE"  = "#d73027",  #negative, significant: red
+      "TRUE.TRUE"   = "#4575b4"   #positive, significant: blue
     ),
     guide = "none"
   ) +
@@ -447,7 +443,7 @@ fig3 <- ggplot(coef_df,
 
 fig3
 
-# Save figure
+#Saving figure 3
 ggsave(
   filename = "Fig3_Model_Coefficients.png",
   plot     = fig3,
@@ -468,7 +464,7 @@ fig_dir <- "C:/Users/bethm/Documents/Manuscript_Figures"
 if(!dir.exists(fig_dir)) dir.create(fig_dir, recursive = TRUE)
 
 
-#Saving figure 3
+#Saving figure 3 in PNG form
 ggsave(filename = file.path(fig_dir, "Fig2_Model_Coefficients.png"),
        plot = fig3, width = 9, height = 7, dpi = 600)
 
